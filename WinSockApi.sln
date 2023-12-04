@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinSockApi", "WinSockApi\WinSockApi.csproj", "{26A01B37-4CC6-4F84-9976-71BDBAEF6FB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleChat.Server", "ConsoleChat.Server\ConsoleChat.Server.csproj", "{C47D2C80-C1A6-4B97-B040-C3FC6D3230B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleChat.Client", "ConsoleChat.Client\ConsoleChat.Client.csproj", "{3B13347B-8330-4739-9AEE-982AD5230039}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{26A01B37-4CC6-4F84-9976-71BDBAEF6FB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26A01B37-4CC6-4F84-9976-71BDBAEF6FB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26A01B37-4CC6-4F84-9976-71BDBAEF6FB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26A01B37-4CC6-4F84-9976-71BDBAEF6FB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C47D2C80-C1A6-4B97-B040-C3FC6D3230B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C47D2C80-C1A6-4B97-B040-C3FC6D3230B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C47D2C80-C1A6-4B97-B040-C3FC6D3230B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C47D2C80-C1A6-4B97-B040-C3FC6D3230B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B13347B-8330-4739-9AEE-982AD5230039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B13347B-8330-4739-9AEE-982AD5230039}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B13347B-8330-4739-9AEE-982AD5230039}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B13347B-8330-4739-9AEE-982AD5230039}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
