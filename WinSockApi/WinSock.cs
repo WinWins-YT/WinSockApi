@@ -112,9 +112,46 @@ public class WinSock : IDisposable
         return status;
     }
 
+    public byte[] Receive()
+    {
+        var ptr = Marshal.AllocCoTaskMem(1024);
+        var status = WinSockNative.recv(_socket, ptr, 1024, 0);
+        if (status == -1)
+            throw new WinSockException("recv failed", WinSockNativeWsa.WSAGetLastError());
+
+        var buffer = new byte[status];
+        Marshal.Copy(ptr, buffer, 0, status);
+        Marshal.FreeCoTaskMem(ptr);
+        
+        return buffer;
+    }
+
+    public bool IsConnected()
+    {
+        try
+        {
+            IsDataAvailable();
+        }
+        catch (WsaException)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public bool IsDataAvailable()
     {
-        var reads = new FdSet
+        var ptr = Marshal.AllocCoTaskMem(1);
+        var status = WinSockNative.recv(_socket, ptr, 1, 2);
+        if (status == -1)
+            throw new WinSockException("recv failed", WinSockNativeWsa.WSAGetLastError());
+        
+        Marshal.FreeCoTaskMem(ptr);
+
+        return status > 0;
+
+        /*var reads = new FdSet
         {
             fd_count = 1,
             fd_array = new long[64]
@@ -127,11 +164,9 @@ public class WinSock : IDisposable
             tv_sec = 1
         };
 
-        var nullptr = Unsafe.NullRef<FdSet>();
+        var status = WinSockNative.select(0, ref reads, IntPtr.Zero, IntPtr.Zero, ref timeout);
 
-        var status = WinSockNative.select(0, ref reads, ref nullptr, ref nullptr, ref timeout);
-
-        return status > 0;
+        return status > 0;*/
     }
 
     public void Dispose()

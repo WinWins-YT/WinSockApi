@@ -29,10 +29,14 @@ internal static class WinSockNative
 
     [DllImport("Ws2_32.dll")]
     internal static extern int select(int nfds, ref FdSet readfds, ref FdSet writefds, ref FdSet exceptfds,
+        ref TimeVal timeout);    
+    
+    [DllImport("Ws2_32.dll")]
+    internal static extern int select(int nfds, ref FdSet readfds, IntPtr writefds, IntPtr exceptfds,
         ref TimeVal timeout);
 
     [DllImport("Ws2_32.dll")]
-    internal static extern int recv(long s, [MarshalAs(UnmanagedType.LPArray)] byte[] buf, int len, int flags);
+    internal static extern int recv(long s, IntPtr buf, int len, int flags);
 }
 
 internal static class WinSockNativeWsa

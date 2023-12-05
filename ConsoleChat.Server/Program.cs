@@ -1,4 +1,5 @@
-﻿using WinSockApi;
+﻿using System.Text;
+using WinSockApi;
 using WinSockApi.Exceptions;
 
 var clientSockets = new List<WinSock>();
@@ -26,10 +27,16 @@ try
     {
         while (!receiveThreadCancel.IsCancellationRequested)
         {
-            foreach (var sock in clientSockets.Where(sock => sock.IsDataAvailable()))
+            try
             {
-                Console.WriteLine("Data available");
+                foreach (var sock in clientSockets)
+                {
+                    if (!sock.IsDataAvailable()) continue;
+                    var buffer = sock.Receive();
+                    Console.WriteLine($"Data received ({buffer.Length} bytes): {Encoding.ASCII.GetString(buffer)}");
+                }
             }
+            catch (InvalidOperationException) {}
         }
     });
     receivingThread.Start();
