@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Net.Security;
+using System.Runtime.InteropServices;
 using WinSockApi.Structs;
 
 namespace WinSockApi;
@@ -24,7 +25,14 @@ internal static class WinSockNative
     internal static extern int connect(long s, ref SocketAddress name, int namelen);
 
     [DllImport("Ws2_32.dll")]
-    internal static extern int send(long s, ref byte[] buf, int len, int flags);
+    internal static extern int send(long s, [MarshalAs(UnmanagedType.LPArray)] byte[] buf, int len, int flags);
+
+    [DllImport("Ws2_32.dll")]
+    internal static extern int select(int nfds, ref FdSet readfds, ref FdSet writefds, ref FdSet exceptfds,
+        ref TimeVal timeout);
+
+    [DllImport("Ws2_32.dll")]
+    internal static extern int recv(long s, [MarshalAs(UnmanagedType.LPArray)] byte[] buf, int len, int flags);
 }
 
 internal static class WinSockNativeWsa

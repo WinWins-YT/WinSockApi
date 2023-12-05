@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using WinSockApi.Enums;
 using WinSockApi.Exceptions;
 using WinSockApi.Structs;
@@ -66,7 +67,7 @@ public class WinSock : IDisposable
         var result = new AddressInfo();
         
         var resPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(result));
-        Marshal.StructureToPtr(result, resPtr, true);
+        Marshal.StructureToPtr(result, resPtr, false);
 
         var status = WinSockNativeTools.GetAddressInfo(address, port.ToString(), ref hints, ref resPtr);
         if (status != 0)
@@ -104,11 +105,33 @@ public class WinSock : IDisposable
 
     public int Send(byte[] data)
     {
-        var status = WinSockNative.send(_socket, ref data, data.Length, 0);
+        var status = WinSockNative.send(_socket, data, data.Length, 0);
         if (status == -1)
             throw new WinSockException("Send failed", WinSockNativeWsa.WSAGetLastError());
 
         return status;
+    }
+
+    public bool IsDataAvailable()
+    {
+        var reads = new FdSet
+        {
+            fd_count = 1,
+            fd_array = new long[64]
+        };
+        reads.fd_array[0] = _socket;
+
+        var timeout = new TimeVal
+        {
+            tv_usec = 0,
+            tv_sec = 1
+        };
+
+        var nullptr = Unsafe.NullRef<FdSet>();
+
+        var status = WinSockNative.select(0, ref reads, ref nullptr, ref nullptr, ref timeout);
+
+        return status > 0;
     }
 
     public void Dispose()

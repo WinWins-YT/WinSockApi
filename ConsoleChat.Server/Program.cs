@@ -3,6 +3,7 @@ using WinSockApi.Exceptions;
 
 var clientSockets = new List<WinSock>();
 var listenThreadCancel = new CancellationTokenSource();
+var receiveThreadCancel = new CancellationTokenSource();
 
 try
 {
@@ -21,6 +22,17 @@ try
         }
     });
     listenThread.Start();
+    var receivingThread = new Thread(() =>
+    {
+        while (!receiveThreadCancel.IsCancellationRequested)
+        {
+            foreach (var sock in clientSockets.Where(sock => sock.IsDataAvailable()))
+            {
+                Console.WriteLine("Data available");
+            }
+        }
+    });
+    receivingThread.Start();
     while (true)
     {
         var command = Console.ReadLine()!;
@@ -29,6 +41,8 @@ try
             case "exit":
                 listenThreadCancel.Cancel();
                 listenThread.Join(1000);
+                receiveThreadCancel.Cancel();
+                receivingThread.Join(1000);
                 socket.Dispose();
                 break;
         }
