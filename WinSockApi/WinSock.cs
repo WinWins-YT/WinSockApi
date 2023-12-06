@@ -13,6 +13,8 @@ public class WinSock : IDisposable
     private readonly Protocol _protocol;
     private readonly long _socket;
     
+    public long Socket => _socket;
+
     private WinSock(AddressFamily addressFamily, SocketType socketType, Protocol protocol)
     {
         _addressFamily = addressFamily;
@@ -71,13 +73,21 @@ public class WinSock : IDisposable
 
         var status = WinSockNativeTools.GetAddressInfo(address, port.ToString(), ref hints, ref resPtr);
         if (status != 0)
+        {
+            Marshal.FreeCoTaskMem(resPtr);
             throw new WinSockException("getaddrinfo failed", status);
+        }
 
         var res = Marshal.PtrToStructure<AddressInfo>(resPtr);
         var addrInfo = Marshal.PtrToStructure<SocketAddress>(res.ai_addr);
         status = WinSockNative.connect(_socket, ref addrInfo, (int)res.ai_addrlen);
         if (status == -1)
+        {
+            Marshal.FreeCoTaskMem(resPtr);
             throw new WinSockException("Connect failed", WinSockNativeWsa.WSAGetLastError());
+        }
+        
+        Marshal.FreeCoTaskMem(resPtr);
     }
 
     public void Listen(int maxConnections = 0x7fffffff)
@@ -112,13 +122,16 @@ public class WinSock : IDisposable
         return status;
     }
 
-    public byte[] Receive()
+    public byte[] Receive(int size = 1024)
     {
-        var ptr = Marshal.AllocCoTaskMem(1024);
-        var status = WinSockNative.recv(_socket, ptr, 1024, 0);
+        var ptr = Marshal.AllocCoTaskMem(size);
+        var status = WinSockNative.recv(_socket, ptr, size, 0);
         if (status == -1)
+        {
+            Marshal.FreeCoTaskMem(ptr);
             throw new WinSockException("recv failed", WinSockNativeWsa.WSAGetLastError());
-
+        }
+        
         var buffer = new byte[status];
         Marshal.Copy(ptr, buffer, 0, status);
         Marshal.FreeCoTaskMem(ptr);
@@ -142,16 +155,19 @@ public class WinSock : IDisposable
 
     public bool IsDataAvailable()
     {
-        var ptr = Marshal.AllocCoTaskMem(1);
+        /*var ptr = Marshal.AllocCoTaskMem(1);
         var status = WinSockNative.recv(_socket, ptr, 1, 2);
         if (status == -1)
+        {
+            Marshal.FreeCoTaskMem(ptr);
             throw new WinSockException("recv failed", WinSockNativeWsa.WSAGetLastError());
+        }
         
         Marshal.FreeCoTaskMem(ptr);
 
-        return status > 0;
+        return status > 0;*/
 
-        /*var reads = new FdSet
+        var reads = new FdSet
         {
             fd_count = 1,
             fd_array = new long[64]
@@ -166,7 +182,7 @@ public class WinSock : IDisposable
 
         var status = WinSockNative.select(0, ref reads, IntPtr.Zero, IntPtr.Zero, ref timeout);
 
-        return status > 0;*/
+        return status > 0;
     }
 
     public void Dispose()

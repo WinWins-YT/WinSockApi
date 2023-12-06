@@ -1,10 +1,15 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
+using ConsoleChat.Protocol.Enums;
+using ConsoleChat.Protocol.Extensions;
+using ConsoleChat.Protocol.Structs;
 using WinSockApi;
 using WinSockApi.Exceptions;
 
 var clientSockets = new List<WinSock>();
 var listenThreadCancel = new CancellationTokenSource();
 var receiveThreadCancel = new CancellationTokenSource();
+var nameDictionary = new Dictionary<long, long>();
 
 try
 {
@@ -18,7 +23,8 @@ try
     {
         while (!listenThreadCancel.IsCancellationRequested)
         {
-            clientSockets.Add(socket.Accept());
+            var newSocket = socket.Accept();
+            clientSockets.Add(newSocket);
             Console.WriteLine("Client connected");
         }
     });
@@ -29,14 +35,45 @@ try
         {
             try
             {
-                foreach (var sock in clientSockets)
+                foreach (var sock in clientSockets.ToList())
                 {
                     if (!sock.IsDataAvailable()) continue;
-                    var buffer = sock.Receive();
-                    Console.WriteLine($"Data received ({buffer.Length} bytes): {Encoding.ASCII.GetString(buffer)}");
+                    var buffer = sock.Receive(Marshal.SizeOf<MemeExchangeProtocol>());
+
+                    if (buffer.Length == 0)
+                    {
+                        sock.Dispose();
+                        clientSockets.Remove(sock);
+                    }
+
+                    Console.WriteLine($"Data received ({buffer.Length} bytes)");
+                    var packet = buffer.FromByteArray<MemeExchangeProtocol>();
+
+                    switch (packet.Command)
+                    {
+                        case (byte)CommandType.SendMessage:
+                            var text = sock.Receive(packet.MessageLength);
+                            if (!nameDictionary.ContainsKey(packet.To))
+                                break;
+                            
+                            var toSocket = clientSockets.FirstOrDefault(x => x.Socket == nameDictionary[packet.To]);
+                            if (toSocket is null)
+                                break;
+                            
+                            var sent = toSocket.Send(buffer);
+                            sent += toSocket.Send(text);
+                            Console.WriteLine($"Sent message to {packet.To} ({sent} bytes)");
+                            break;
+                        
+                        case (byte)CommandType.Register:
+                            nameDictionary[packet.From] = sock.Socket;
+                            Console.WriteLine($"Registered sockets {packet.From} => {sock.Socket}");
+                            break;
+                    }
+                    //Console.WriteLine($"Data received ({buffer.Length} bytes): {Encoding.ASCII.GetString(buffer)}");
                 }
             }
-            catch (InvalidOperationException) {}
+            catch (WinSockException) {}
         }
     });
     receivingThread.Start();
